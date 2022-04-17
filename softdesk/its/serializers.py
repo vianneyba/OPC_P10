@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from its.models import Project, Issue
+from its.models import Project, Issue, Comment
 
 
 class ProjectSerializer(ModelSerializer):
@@ -21,4 +21,13 @@ class IssueSerializer(ModelSerializer):
             'id', 'title', 'description',
             'author', 'tag', 'status',
             'created_at'
+        ]
+
+
+class CommentSerializer(ModelSerializer):
+
+    class Meta:
+        model = Comment
+        fields = [
+            'id', 'description', 'author'
         ]
