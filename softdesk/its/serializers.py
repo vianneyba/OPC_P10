@@ -1,6 +1,6 @@
 from rest_framework.serializers import ModelSerializer
 
-from its.models import Project
+from its.models import Project, Issue
 
 
 class ProjectSerializer(ModelSerializer):
@@ -10,4 +10,15 @@ class ProjectSerializer(ModelSerializer):
         fields = [
             'id', 'title', 'description',
             'type_project', 'author', 'contributors'
+        ]
+
+
+class IssueSerializer(ModelSerializer):
+
+    class Meta:
+        model = Issue
+        fields = [
+            'id', 'title', 'description',
+            'author', 'tag', 'status',
+            'created_at'
         ]

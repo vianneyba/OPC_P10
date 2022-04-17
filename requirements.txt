@@ -1,3 +1,4 @@
 Django==4.0.1
-djangorestframework
-flake8
+djangorestframework==3.13.1
+flake8==4.0.1
+drf-nested-routers==0.93.4
