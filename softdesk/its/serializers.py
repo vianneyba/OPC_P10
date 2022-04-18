@@ -6,8 +6,8 @@ from authenticate.serializers import UserSerializer
 
 class ProjectSerializer(ModelSerializer):
 
-    contributors = UserSerializer(many=True)
-    author = UserSerializer()
+    # contributors = UserSerializer(many=True)
+    # author = UserSerializer()
 
     class Meta:
         model = Project
@@ -15,6 +15,9 @@ class ProjectSerializer(ModelSerializer):
             'id', 'title', 'description',
             'type_project', 'author', 'contributors'
         ]
+        extra_kwargs = {
+            'contributors': {'allow_empty': True, 'required': False}
+        }
 
 
 class IssueSerializer(ModelSerializer):

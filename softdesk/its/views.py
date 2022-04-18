@@ -1,4 +1,6 @@
 from rest_framework.viewsets import ModelViewSet
+from rest_framework import status
+from rest_framework.response import Response
 from its.models import Project, Issue, Comment
 from its.serializers import (
     ProjectSerializer, IssueSerializer, CommentSerializer
@@ -11,6 +13,19 @@ class ProjectViewset(ModelViewSet):
 
     def get_queryset(self):
         return Project.objects.all()
+
+    def create(self, request, *args, **kwargs):
+        tempdict = request.data.copy()
+        tempdict['author'] = self.request.user.id
+        serializer = self.serializer_class(data=tempdict)
+
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class IssueViewset(ModelViewSet):
