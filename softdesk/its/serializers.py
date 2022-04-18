@@ -1,9 +1,13 @@
 from rest_framework.serializers import ModelSerializer
 
 from its.models import Project, Issue, Comment
+from authenticate.serializers import UserSerializer
 
 
 class ProjectSerializer(ModelSerializer):
+
+    contributors = UserSerializer(many=True)
+    author = UserSerializer()
 
     class Meta:
         model = Project
@@ -15,6 +19,8 @@ class ProjectSerializer(ModelSerializer):
 
 class IssueSerializer(ModelSerializer):
 
+    author = UserSerializer()
+
     class Meta:
         model = Issue
         fields = [
@@ -25,6 +31,8 @@ class IssueSerializer(ModelSerializer):
 
 
 class CommentSerializer(ModelSerializer):
+
+    author = UserSerializer()
 
     class Meta:
         model = Comment

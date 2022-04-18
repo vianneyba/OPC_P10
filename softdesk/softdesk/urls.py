@@ -2,6 +2,10 @@ from django.contrib import admin
 from django.urls import path, include
 from rest_framework_nested import routers
 from its.views import ProjectViewset, IssueViewset, CommentViewSet
+from rest_framework_simplejwt.views import (
+    TokenObtainPairView,
+    TokenRefreshView,
+)
 
 router = routers.SimpleRouter()
 router.register('projects', ProjectViewset, basename='projects')
@@ -17,6 +21,7 @@ issues_router.register(r'comments', CommentViewSet, basename='comments')
 urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
+    path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
     path('', include(router.urls)),
     path('', include(projects_router.urls)),
     path('', include(issues_router.urls))
