@@ -6,6 +6,7 @@ from rest_framework_simplejwt.views import (
     TokenObtainPairView,
     TokenRefreshView,
 )
+from authenticate.views import SignUpView
 
 router = routers.SimpleRouter()
 router.register('projects', ProjectViewset, basename='projects')
@@ -22,6 +23,7 @@ urlpatterns = [
     path('admin/', admin.site.urls),
     path('api-auth/', include('rest_framework.urls')),
     path('login/', TokenObtainPairView.as_view(), name='token_obtain_pair'),
+    path('signup/', SignUpView.as_view(), name='signup'),
     path('', include(router.urls)),
     path('', include(projects_router.urls)),
     path('', include(issues_router.urls))
