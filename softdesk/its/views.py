@@ -47,6 +47,16 @@ class ProjectViewset(ModelViewSet):
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
+    def destroy(self, request, pk, *args, **kwargs):
+        try:
+            project_instance = Project.objects.get(pk=pk)
+        except Project.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        project_instance.delete()
+        return Response({
+            "message": "project deleted"}, status=status.HTTP_200_OK)
+
 
 class IssueViewset(ModelViewSet):
 
