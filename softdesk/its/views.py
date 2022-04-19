@@ -16,15 +16,23 @@ PROJECT_NO_EXIST = Response(
     {"message": "project does not exist"},
     status=status.HTTP_404_NOT_FOUND)
 
-CONTRIBUTOR_ADD = Response(
-    {"message": "contributor added"}, status=status.HTTP_200_OK)
+ISSUE_NOT_EXIST = Response(
+    {"message": "issue does not exist"},
+    status=status.HTTP_404_NOT_FOUND)
+
+COMMENT_NOT_EXIST = Response(
+    {"message": "comment does not exist"},
+    status=status.HTTP_404_NOT_FOUND)
+
+COMMENT_DELETE = Response(
+    {"message": "comment deleted"}, status=status.HTTP_200_OK)
 
 CONTRIBUTOR_DELETE = Response(
     {"message": "contributor deleted"}, status=status.HTTP_200_OK)
 
-ISSUE_NOT_EXIST = Response(
-    {"message": "issue does not exist"},
-    status=status.HTTP_404_NOT_FOUND)
+CONTRIBUTOR_ADD = Response(
+    {"message": "contributor added"}, status=status.HTTP_200_OK)
+
 
 ISSUE_DELETE = Response(
     {"message": "issue deleted"}, status=status.HTTP_200_OK)
@@ -32,9 +40,8 @@ ISSUE_DELETE = Response(
 COMMENT_CREATE = Response(
     {"message": "comment created"}, status=status.HTTP_200_OK)
 
-COMMENT_NOT_EXIST = Response(
-    {"message": "comment does not exist"}, status=status.HTTP_404_NOT_FOUND)
-
+FORBIDDEN = Response(
+    status.HTTP_403_FORBIDDEN)
 
 def is_valid(serializer):
     if serializer.is_valid():
@@ -176,7 +183,7 @@ class CommentViewSet(ModelViewSet):
         tempdict = data.copy()
         tempdict['author'] = user_id
         tempdict['issue'] = issue_id
-        print(f'tempdict = {tempdict}')
+
         if update:
             serializer = self.serializer_class(instance, data=tempdict)
         else:
@@ -197,12 +204,11 @@ class CommentViewSet(ModelViewSet):
             return ISSUE_NOT_EXIST
 
         serializer = self.create_comment(
-            request.data, request.user.id, issue=issue.id)
+            request.data, request.user.id, issue.id)
 
         return is_valid(serializer)
 
     def update(self, request, *args, **kwargs):
-        print(f'self.kwargs = {self.kwargs}')
         comment_id = self.kwargs['pk']
         issue_id = self.kwargs['issue_pk']
 
@@ -216,6 +222,22 @@ class CommentViewSet(ModelViewSet):
             update=True, instance=comment)
 
         return is_valid(serializer)
+
+    def destroy(self, request, *args, **kwargs):
+        user_id = request.user.id
+        comment_id = self.kwargs['pk']
+
+        try:
+            comment = Comment.objects.get(pk=comment_id)
+        except Comment.DoesNotExist:
+            return COMMENT_NOT_EXIST
+
+        if comment.author.id == user_id:
+            comment.delete()
+        else:
+            return FORBIDDEN
+
+        return COMMENT_DELETE
 
 
 class UserViewSet(ModelViewSet):

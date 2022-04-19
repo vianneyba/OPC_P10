@@ -16,4 +16,5 @@ class UserSerializer(ModelSerializer):
             data['username'], data['email'], data['password'])
         user.first_name = data['first_name']
         user.last_name = data['last_name']
+        user.save()
         return user
