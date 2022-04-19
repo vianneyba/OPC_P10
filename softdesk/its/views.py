@@ -26,6 +26,9 @@ ISSUE_NOT_EXIST = Response(
     {"message": "issue does not exist"},
     status=status.HTTP_404_NOT_FOUND)
 
+ISSUE_DELETE = Response(
+    {"message": "issue deleted"}, status=status.HTTP_200_OK)
+
 
 class ProjectViewset(ModelViewSet):
 
@@ -119,7 +122,7 @@ class IssueViewset(ModelViewSet):
 
         return self.is_valid(serializer)
 
-    def update(self, request, pk, *args, **kwargs):
+    def update(self, request, *args, **kwargs):
         project_id = self.kwargs['project_pk']
         issue_id = self.kwargs['pk']
         try:
@@ -137,6 +140,23 @@ class IssueViewset(ModelViewSet):
             update=True, instance=issue)
 
         return self.is_valid(serializer)
+
+    def destroy(self, request, *args, **kwargs):
+        project_id = self.kwargs['project_pk']
+        issue_id = self.kwargs['pk']
+
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            issue = Issue.objects.get(pk=issue_id, project=project)
+        except Issue.DoesNotExist:
+            return ISSUE_NOT_EXIST
+
+        issue.delete()
+        return ISSUE_DELETE
 
 
 class CommentViewSet(ModelViewSet):
