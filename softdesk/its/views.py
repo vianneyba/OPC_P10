@@ -5,6 +5,7 @@ from its.models import Project, Issue, Comment
 from its.serializers import (
     ProjectSerializer, IssueSerializer, CommentSerializer
 )
+from authenticate.serializers import UserSerializer
 
 
 class ProjectViewset(ModelViewSet):
@@ -72,3 +73,14 @@ class CommentViewSet(ModelViewSet):
 
     def get_queryset(self):
         return Comment.objects.filter(issues=self.kwargs['issue_pk'])
+
+
+class UserViewSet(ModelViewSet):
+
+    serializer_class = UserSerializer
+
+    def get_queryset(self):
+        project = Project.objects.get(id=self.kwargs['project_pk'])
+        users = list(project.contributors.all())
+        users.append(project.author)
+        return users
