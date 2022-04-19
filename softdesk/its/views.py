@@ -1,3 +1,4 @@
+from django.contrib.auth.models import User
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
 from rest_framework.response import Response
@@ -84,3 +85,27 @@ class UserViewSet(ModelViewSet):
         users = list(project.contributors.all())
         users.append(project.author)
         return users
+
+    def destroy(self, request, pk, *args, **kwargs):
+        id_user = self.kwargs['pk']
+        id_project = self.kwargs['project_pk']
+
+        try:
+            project = Project.objects.get(pk=id_project)
+        except Project.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        try:
+            user = User.objects.get(pk=id_user)
+        except User.DoesNotExist:
+            return Response(status=status.HTTP_404_NOT_FOUND)
+
+        if user in project.contributors.all():
+            project.contributors.remove(user)
+            project.save()
+            return Response(
+                {"message": "contributor deleted"}, status=status.HTTP_200_OK)
+        else:
+            return Response(
+                {"message": "user not in project"},
+                status=status.HTTP_404_NOT_FOUND)
