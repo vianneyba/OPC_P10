@@ -6,21 +6,18 @@ class IssueAdmin(admin.ModelAdmin):
     list_display = (
         'title', 'description', 'author',
         'tag', 'status', 'project',
-        'created_at' 
-    )
+        'created_at')
 
 
 class ProjectAdmin(admin.ModelAdmin):
     list_display = (
         'title', 'description', 'type_project',
-        'author'
-    )
+        'author')
 
 
 class CommentAdmin(admin.ModelAdmin):
     list_display = (
-        'description', 'issues', 'author'
-    )
+        'description', 'issue', 'author')
 
 
 admin.site.register(Issue, IssueAdmin)

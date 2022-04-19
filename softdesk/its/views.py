@@ -29,6 +29,19 @@ ISSUE_NOT_EXIST = Response(
 ISSUE_DELETE = Response(
     {"message": "issue deleted"}, status=status.HTTP_200_OK)
 
+COMMENT_CREATE = Response(
+    {"message": "comment created"}, status=status.HTTP_200_OK)
+
+
+def is_valid(serializer):
+    if serializer.is_valid():
+        serializer.save()
+        return Response(
+            serializer.data, status=status.HTTP_201_CREATED)
+    else:
+        return Response(
+            serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
 
 class ProjectViewset(ModelViewSet):
 
@@ -98,15 +111,6 @@ class IssueViewset(ModelViewSet):
 
         return serializer
 
-    def is_valid(self, serializer):
-        if serializer.is_valid():
-            serializer.save()
-            return Response(
-                serializer.data, status=status.HTTP_201_CREATED)
-        else:
-            return Response(
-                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
     def get_queryset(self):
         return Issue.objects.filter(project=self.kwargs['project_pk'])
 
@@ -120,7 +124,7 @@ class IssueViewset(ModelViewSet):
         serializer = self.create_issue(
             request.data, request.user.id, project_id)
 
-        return self.is_valid(serializer)
+        return is_valid(serializer)
 
     def update(self, request, *args, **kwargs):
         project_id = self.kwargs['project_pk']
@@ -139,7 +143,7 @@ class IssueViewset(ModelViewSet):
             request.data, request.user.id, project_id,
             update=True, instance=issue)
 
-        return self.is_valid(serializer)
+        return is_valid(serializer)
 
     def destroy(self, request, *args, **kwargs):
         project_id = self.kwargs['project_pk']
@@ -163,8 +167,36 @@ class CommentViewSet(ModelViewSet):
 
     serializer_class = CommentSerializer
 
+    def create_comment(
+                    self, data, user_id, issue_id,
+                    update=False, instance=None):
+        tempdict = data.copy()
+        tempdict['author'] = user_id
+        tempdict['issue'] = issue_id
+        print(f'tempdict = {tempdict}')
+        if update:
+            serializer = self.serializer_class(instance, data=tempdict)
+        else:
+            serializer = self.serializer_class(data=tempdict)
+
+        return serializer
+
     def get_queryset(self):
-        return Comment.objects.filter(issues=self.kwargs['issue_pk'])
+        return Comment.objects.filter(issue=self.kwargs['issue_pk'])
+
+    def create(self, request, *args, **kwargs):
+        project_id = self.kwargs['project_pk']
+        issue_id = self.kwargs['issue_pk']
+
+        try:
+            issue = Issue.objects.get(pk=issue_id, project__pk=project_id)
+        except Issue.DoesNotExist:
+            return ISSUE_NOT_EXIST
+
+        serializer = self.create_comment(
+            request.data, request.user.id, issue.id)
+
+        return is_valid(serializer)
 
 
 class UserViewSet(ModelViewSet):

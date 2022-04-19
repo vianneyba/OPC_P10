@@ -90,15 +90,15 @@ class Comment(models.Model):
         max_length=1500,
         blank=False)
 
-    issues = models.ForeignKey(
+    issue = models.ForeignKey(
         'Issue',
         related_name='comments',
         on_delete=models.CASCADE)
-        
+
     author = models.ForeignKey(
         User,
         related_name='comment_author',
         on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.issues.title}'
+        return f'{self.issue.title}'
