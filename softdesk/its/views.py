@@ -32,6 +32,9 @@ ISSUE_DELETE = Response(
 COMMENT_CREATE = Response(
     {"message": "comment created"}, status=status.HTTP_200_OK)
 
+COMMENT_NOT_EXIST = Response(
+    {"message": "comment does not exist"}, status=status.HTTP_404_NOT_FOUND)
+
 
 def is_valid(serializer):
     if serializer.is_valid():
@@ -194,7 +197,23 @@ class CommentViewSet(ModelViewSet):
             return ISSUE_NOT_EXIST
 
         serializer = self.create_comment(
-            request.data, request.user.id, issue.id)
+            request.data, request.user.id, issue=issue.id)
+
+        return is_valid(serializer)
+
+    def update(self, request, *args, **kwargs):
+        print(f'self.kwargs = {self.kwargs}')
+        comment_id = self.kwargs['pk']
+        issue_id = self.kwargs['issue_pk']
+
+        try:
+            comment = Comment.objects.get(pk=comment_id)
+        except Comment.DoesNotExist:
+            return COMMENT_NOT_EXIST
+
+        serializer = self.create_comment(
+            request.data, request.user.id, issue_id,
+            update=True, instance=comment)
 
         return is_valid(serializer)
 
