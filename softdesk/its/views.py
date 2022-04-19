@@ -8,6 +8,20 @@ from its.serializers import (
 )
 from authenticate.serializers import UserSerializer
 
+USER_NO_EXIST = Response(
+    {"message": "user does not exist"},
+    status=status.HTTP_404_NOT_FOUND)
+
+PROJECT_NO_EXIST = Response(
+    {"message": "project does not exist"},
+    status=status.HTTP_404_NOT_FOUND)
+
+CONTRIBUTOR_ADD = Response(
+    {"message": "contributor added"}, status=status.HTTP_200_OK)
+
+CONTRIBUTOR_DELETE = Response(
+    {"message": "contributor deleted"}, status=status.HTTP_200_OK)
+
 
 class ProjectViewset(ModelViewSet):
 
@@ -86,6 +100,24 @@ class UserViewSet(ModelViewSet):
         users.append(project.author)
         return users
 
+    def create(self, request, *args, **kwargs):
+        username = request.data["username"]
+        project_id = self.kwargs['project_pk']
+
+        try:
+            user = User.objects.get(username=username)
+        except User.DoesNotExist:
+            return USER_NO_EXIST
+
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return PROJECT_NO_EXIST
+
+        project.contributors.add(user)
+
+        return CONTRIBUTOR_ADD
+
     def destroy(self, request, pk, *args, **kwargs):
         id_user = self.kwargs['pk']
         id_project = self.kwargs['project_pk']
@@ -103,8 +135,7 @@ class UserViewSet(ModelViewSet):
         if user in project.contributors.all():
             project.contributors.remove(user)
             project.save()
-            return Response(
-                {"message": "contributor deleted"}, status=status.HTTP_200_OK)
+            return CONTRIBUTOR_DELETE
         else:
             return Response(
                 {"message": "user not in project"},
