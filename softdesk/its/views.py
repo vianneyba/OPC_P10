@@ -22,6 +22,10 @@ CONTRIBUTOR_ADD = Response(
 CONTRIBUTOR_DELETE = Response(
     {"message": "contributor deleted"}, status=status.HTTP_200_OK)
 
+ISSUE_NOT_EXIST = Response(
+    {"message": "issue does not exist"},
+    status=status.HTTP_404_NOT_FOUND)
+
 
 class ProjectViewset(ModelViewSet):
 
@@ -78,8 +82,61 @@ class IssueViewset(ModelViewSet):
 
     serializer_class = IssueSerializer
 
+    def create_issue(
+                    self, data, user_id, project_id,
+                    update=False, instance=None):
+        tempdict = data.copy()
+        tempdict['author'] = user_id
+        tempdict['project'] = project_id
+        if update:
+            serializer = IssueSerializer(instance, data=tempdict)
+        else:
+            serializer = self.serializer_class(data=tempdict)
+
+        return serializer
+
+    def is_valid(self, serializer):
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
     def get_queryset(self):
         return Issue.objects.filter(project=self.kwargs['project_pk'])
+
+    def create(self, request, *args, **kwargs):
+        project_id = self.kwargs['project_pk']
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return PROJECT_NO_EXIST
+
+        serializer = self.create_issue(
+            request.data, request.user.id, project_id)
+
+        return self.is_valid(serializer)
+
+    def update(self, request, pk, *args, **kwargs):
+        project_id = self.kwargs['project_pk']
+        issue_id = self.kwargs['pk']
+        try:
+            project = Project.objects.get(pk=project_id)
+        except Project.DoesNotExist:
+            return PROJECT_NO_EXIST
+
+        try:
+            issue = Issue.objects.get(pk=issue_id)
+        except Issue.DoesNotExist:
+            return ISSUE_NOT_EXIST
+
+        serializer = self.create_issue(
+            request.data, request.user.id, project_id,
+            update=True, instance=issue)
+
+        return self.is_valid(serializer)
 
 
 class CommentViewSet(ModelViewSet):

@@ -22,14 +22,14 @@ class ProjectSerializer(ModelSerializer):
 
 class IssueSerializer(ModelSerializer):
 
-    author = UserSerializer()
+    # author = UserSerializer()
 
     class Meta:
         model = Issue
         fields = [
             'id', 'title', 'description',
             'author', 'tag', 'status',
-            'created_at'
+            'created_at', 'project'
         ]
 
 
