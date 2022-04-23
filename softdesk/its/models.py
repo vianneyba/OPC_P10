@@ -21,6 +21,12 @@ TYPE = (
     ('android', 'android')
 )
 
+PRIORITY = (
+    ('FAIBLE', 'FAIBLE'),
+    ('MOYENNE', 'MOYENNE'),
+    ('ÉLEVÉE', 'ÉLEVÉE')
+)
+
 
 class Issue(models.Model):
     title = models.CharField(
@@ -40,6 +46,12 @@ class Issue(models.Model):
         choices=TAG,
         max_length=20,
         blank=False)
+
+    priority = models.CharField(
+        choices=PRIORITY,
+        max_length=20,
+        blank=False
+    )
 
     status = models.CharField(
         choices=STATUS,

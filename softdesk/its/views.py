@@ -9,7 +9,11 @@ from its.serializers import (
     ProjectSerializer, IssueSerializer, CommentSerializer
 )
 from authenticate.serializers import UserSerializer
-from its.permissions import ProjectPermissions
+from its.permissions import (
+    ProjectPermissions,
+    ContributorPermissions,
+    IssuePermissions,
+)
 
 USER_NO_EXIST = Response(
     {"message": "user does not exist"},
@@ -58,7 +62,7 @@ def is_valid(serializer):
 
 class ProjectViewset(ModelViewSet):
 
-    permission_classes = (ProjectPermissions,)
+    permission_classes = (IsAuthenticated, ProjectPermissions,)
     serializer_class = ProjectSerializer
 
     def get_queryset(self):
@@ -113,6 +117,7 @@ class ProjectViewset(ModelViewSet):
 
 class IssueViewset(ModelViewSet):
 
+    permission_classes = (IsAuthenticated, IssuePermissions,)
     serializer_class = IssueSerializer
 
     def create_issue(
@@ -249,7 +254,7 @@ class CommentViewSet(ModelViewSet):
 
 class UserViewSet(ModelViewSet):
 
-    permission_classes = (IsAuthenticated,)
+    permission_classes = (IsAuthenticated, ContributorPermissions,)
     serializer_class = UserSerializer
 
     def get_queryset(self):
