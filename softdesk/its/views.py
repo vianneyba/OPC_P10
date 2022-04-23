@@ -1,12 +1,15 @@
 from django.contrib.auth.models import User
+from django.db.models import Q
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
+from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from its.models import Project, Issue, Comment
 from its.serializers import (
     ProjectSerializer, IssueSerializer, CommentSerializer
 )
 from authenticate.serializers import UserSerializer
+from its.permissions import ProjectPermissions
 
 USER_NO_EXIST = Response(
     {"message": "user does not exist"},
@@ -33,7 +36,6 @@ CONTRIBUTOR_DELETE = Response(
 CONTRIBUTOR_ADD = Response(
     {"message": "contributor added"}, status=status.HTTP_200_OK)
 
-
 ISSUE_DELETE = Response(
     {"message": "issue deleted"}, status=status.HTTP_200_OK)
 
@@ -42,6 +44,7 @@ COMMENT_CREATE = Response(
 
 FORBIDDEN = Response(
     status.HTTP_403_FORBIDDEN)
+
 
 def is_valid(serializer):
     if serializer.is_valid():
@@ -55,10 +58,14 @@ def is_valid(serializer):
 
 class ProjectViewset(ModelViewSet):
 
+    permission_classes = (ProjectPermissions,)
     serializer_class = ProjectSerializer
 
     def get_queryset(self):
-        return Project.objects.all()
+        return Project.objects.filter(
+            Q(contributors=self.request.user) |
+            Q(author=self.request.user)
+        ).distinct()
 
     def create(self, request, *args, **kwargs):
         tempdict = request.data.copy()
@@ -242,6 +249,7 @@ class CommentViewSet(ModelViewSet):
 
 class UserViewSet(ModelViewSet):
 
+    permission_classes = (IsAuthenticated,)
     serializer_class = UserSerializer
 
     def get_queryset(self):
@@ -251,7 +259,7 @@ class UserViewSet(ModelViewSet):
         return users
 
     def create(self, request, *args, **kwargs):
-        username = request.data["username"]
+        username = request.data["email"]
         project_id = self.kwargs['project_pk']
 
         try:
