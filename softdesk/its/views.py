@@ -13,6 +13,7 @@ from its.permissions import (
     ProjectPermissions,
     ContributorPermissions,
     IssuePermissions,
+    CommentPermissions
 )
 
 USER_NO_EXIST = Response(
@@ -139,7 +140,7 @@ class IssueViewset(ModelViewSet):
     def create(self, request, *args, **kwargs):
         project_id = self.kwargs['project_pk']
         try:
-            project = Project.objects.get(pk=project_id)
+            Project.objects.get(pk=project_id)
         except Project.DoesNotExist:
             return PROJECT_NO_EXIST
 
@@ -152,7 +153,7 @@ class IssueViewset(ModelViewSet):
         project_id = self.kwargs['project_pk']
         issue_id = self.kwargs['pk']
         try:
-            project = Project.objects.get(pk=project_id)
+            Project.objects.get(pk=project_id)
         except Project.DoesNotExist:
             return PROJECT_NO_EXIST
 
@@ -187,6 +188,7 @@ class IssueViewset(ModelViewSet):
 
 class CommentViewSet(ModelViewSet):
 
+    permission_classes = (IsAuthenticated, CommentPermissions,)
     serializer_class = CommentSerializer
 
     def create_comment(
