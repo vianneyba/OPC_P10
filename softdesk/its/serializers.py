@@ -6,8 +6,8 @@ from authenticate.serializers import UserSerializer
 
 class ProjectSerializer(ModelSerializer):
 
-    # contributors = UserSerializer(many=True)
-    # author = UserSerializer()
+    contributors = UserSerializer(many=True, read_only=True)
+    author = UserSerializer(read_only=True)
     type = SerializerMethodField('get_type_project')
 
     class Meta:
@@ -26,7 +26,7 @@ class ProjectSerializer(ModelSerializer):
 
 class IssueSerializer(ModelSerializer):
 
-    # author = UserSerializer()
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Issue
@@ -39,7 +39,7 @@ class IssueSerializer(ModelSerializer):
 
 class CommentSerializer(ModelSerializer):
 
-    # author = UserSerializer()
+    author = UserSerializer(read_only=True)
 
     class Meta:
         model = Comment
