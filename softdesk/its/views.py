@@ -6,7 +6,10 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from its.models import Project, Issue, Comment
 from its.serializers import (
-    ProjectSerializer, IssueSerializer, CommentSerializer
+    ProjectSerializer,
+    IssueSerializer,
+    CommentSerializer,
+    ProjectSaveSerializer
 )
 from authenticate.serializers import UserSerializer
 from its.permissions import (
@@ -75,7 +78,7 @@ class ProjectViewset(ModelViewSet):
     def create(self, request, *args, **kwargs):
         tempdict = request.data.copy()
         tempdict['author'] = self.request.user.id
-        serializer = self.serializer_class(data=tempdict)
+        serializer = ProjectSaveSerializer(data=tempdict)
 
         if serializer.is_valid():
             serializer.save()

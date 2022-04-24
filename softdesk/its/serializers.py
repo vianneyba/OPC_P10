@@ -4,6 +4,18 @@ from its.models import Project, Issue, Comment
 from authenticate.serializers import UserSerializer
 
 
+class ProjectSaveSerializer(ModelSerializer):
+
+    class Meta:
+        model = Project
+        fields = [
+                'id', 'title', 'description',
+                'type_project', 'author', 'contributors']
+        extra_kwargs = {
+            'contributors': {'allow_empty': True, 'required': False}
+        }
+
+
 class ProjectSerializer(ModelSerializer):
 
     contributors = UserSerializer(many=True, read_only=True)
