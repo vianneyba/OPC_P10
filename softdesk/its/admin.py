@@ -11,7 +11,7 @@ class IssueAdmin(admin.ModelAdmin):
 
 class ProjectAdmin(admin.ModelAdmin):
     list_display = (
-        'title', 'description', 'type_project',
+        'title', 'description', 'type',
         'author')
 
 

@@ -1,7 +1,27 @@
-from rest_framework.serializers import ModelSerializer, SerializerMethodField
+from rest_framework.serializers import ModelSerializer
 
 from its.models import Project, Issue, Comment
 from authenticate.serializers import UserSerializer
+
+
+class CommentSaveSerializer(ModelSerializer):
+
+    class Meta:
+        model = Comment
+        fields = [
+            'id', 'description', 'author', 'issue'
+        ]
+
+
+class IssueSaveSerializer(ModelSerializer):
+
+    class Meta:
+        model = Issue
+        fields = [
+            'id', 'title', 'description',
+            'author', 'tag', 'status',
+            'created_at', 'project', 'priority'
+        ]
 
 
 class ProjectSaveSerializer(ModelSerializer):
@@ -10,7 +30,7 @@ class ProjectSaveSerializer(ModelSerializer):
         model = Project
         fields = [
                 'id', 'title', 'description',
-                'type_project', 'author', 'contributors']
+                'type', 'author', 'contributors']
         extra_kwargs = {
             'contributors': {'allow_empty': True, 'required': False}
         }
@@ -20,7 +40,6 @@ class ProjectSerializer(ModelSerializer):
 
     contributors = UserSerializer(many=True, read_only=True)
     author = UserSerializer(read_only=True)
-    type = SerializerMethodField('get_type_project')
 
     class Meta:
         model = Project
@@ -31,9 +50,6 @@ class ProjectSerializer(ModelSerializer):
         extra_kwargs = {
             'contributors': {'allow_empty': True, 'required': False}
         }
-
-    def get_type_project(self, obj):
-        return obj.type_project
 
 
 class IssueSerializer(ModelSerializer):

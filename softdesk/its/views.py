@@ -9,7 +9,9 @@ from its.serializers import (
     ProjectSerializer,
     IssueSerializer,
     CommentSerializer,
-    ProjectSaveSerializer
+    ProjectSaveSerializer,
+    IssueSaveSerializer,
+    CommentSaveSerializer
 )
 from authenticate.serializers import UserSerializer
 from its.permissions import (
@@ -79,7 +81,6 @@ class ProjectViewset(ModelViewSet):
         tempdict = request.data.copy()
         tempdict['author'] = self.request.user.id
         serializer = ProjectSaveSerializer(data=tempdict)
-
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -131,9 +132,9 @@ class IssueViewset(ModelViewSet):
         tempdict['author'] = user_id
         tempdict['project'] = project_id
         if update:
-            serializer = IssueSerializer(instance, data=tempdict)
+            serializer = IssueSaveSerializer(instance, data=tempdict)
         else:
-            serializer = self.serializer_class(data=tempdict)
+            serializer = IssueSaveSerializer(data=tempdict)
 
         return serializer
 
@@ -202,9 +203,9 @@ class CommentViewSet(ModelViewSet):
         tempdict['issue'] = issue_id
 
         if update:
-            serializer = self.serializer_class(instance, data=tempdict)
+            serializer = CommentSaveSerializer(instance, data=tempdict)
         else:
-            serializer = self.serializer_class(data=tempdict)
+            serializer = CommentSaveSerializer(data=tempdict)
 
         return serializer
 

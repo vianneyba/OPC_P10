@@ -79,7 +79,7 @@ class Project(models.Model):
         max_length=1500,
         blank=False)
 
-    type_project = models.CharField(
+    type = models.CharField(
         choices=TYPE,
         max_length=20,
         blank=False)
