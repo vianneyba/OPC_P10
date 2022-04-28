@@ -1,5 +1,5 @@
 from rest_framework.serializers import ModelSerializer
-from django.contrib.auth.models import User
+from authenticate.models import User
 
 
 class UserSerializer(ModelSerializer):
@@ -15,7 +15,7 @@ class UserSerializer(ModelSerializer):
 
     def create(self, data):
         user = User.objects.create_user(
-            data['email'], data['email'], data['password'])
+            data['email'], data['password'])
         user.first_name = data['first_name']
         user.last_name = data['last_name']
         user.save()
