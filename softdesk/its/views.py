@@ -6,7 +6,7 @@ from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from its.models import Project, Issue, Comment, Contributor
-from its.models import TYPE, TAG, STATUS, PRIORITY
+from its.models import TYPE, TAG, STATUS, PRIORITY, PERMISSIONS_CHOICES
 from its import serializers, permissions, code_return
 from authenticate.serializers import UserSerializer
 
@@ -247,20 +247,32 @@ class UserViewSet(ModelViewSet):
         except Project.DoesNotExist:
             return code_return.PROJECT_NO_EXIST
 
-        try:
-            Contributor.objects.get(user=user, project=project)
-            return code_return.CONTRIBUTOR_EXISTS
-        except Contributor.DoesNotExist:
-            sz = serializers.ContributorSaveSerializer(data=request.data)
-            if sz.is_valid():
+        sz = serializers.ContributorSaveSerializer(data=request.data)
+        if sz.is_valid():
+            try:
+                contributor = Contributor.objects.get(
+                    user=user, project=project)
+                if contributor.permission != request.data['permission']:
+                    contributor = Contributor.objects.get(
+                        project=project, user=user)
+                    contributor.permission = request.data['permission']
+                    contributor.save()
+                    contributor_sz = serializers.ContributorSerializer(contributor)
+                    if request.data['permission'] == 'author':
+                        project.author = user
+                        project.save()
+                    return Response(
+                        contributor_sz.data, status=status.HTTP_200_OK)
+                return code_return.CONTRIBUTOR_EXISTS
+            except Contributor.DoesNotExist:
                 sz.save(project=project, user=user)
                 contributor = Contributor.objects.get(
                     project=project, user=user)
                 contributor_sz = serializers.ContributorSerializer(contributor)
                 return Response(
                     contributor_sz.data, status=status.HTTP_200_OK)
-            return Response(
-                sz.errors, status=status.HTTP_400_BAD_REQUEST)
+        return Response(
+            sz.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk, *args, **kwargs):
         id_user = self.kwargs['pk']
@@ -293,6 +305,7 @@ def option_view(self):
         'tag': TAG,
         'status': STATUS,
         'type': TYPE,
-        'priority': PRIORITY}
+        'priority': PRIORITY,
+        'Permissions': PERMISSIONS_CHOICES}
 
     return JsonResponse(json_object)

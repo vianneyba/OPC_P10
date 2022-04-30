@@ -1,11 +1,10 @@
-from rest_framework.serializers import ModelSerializer
-
+from rest_framework import serializers
 from its import models
 from authenticate.serializers import (
     UserSerializer, UserProjectSerializer)
 
 
-class CommentSaveSerializer(ModelSerializer):
+class CommentSaveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Comment
@@ -14,7 +13,7 @@ class CommentSaveSerializer(ModelSerializer):
         ]
 
 
-class IssueSaveSerializer(ModelSerializer):
+class IssueSaveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Issue
@@ -25,7 +24,7 @@ class IssueSaveSerializer(ModelSerializer):
         ]
 
 
-class ProjectSaveSerializer(ModelSerializer):
+class ProjectSaveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Project
@@ -37,7 +36,7 @@ class ProjectSaveSerializer(ModelSerializer):
         }
 
 
-class ProjectSerializer(ModelSerializer):
+class ProjectSerializer(serializers.ModelSerializer):
 
     contributors = UserProjectSerializer(many=True, read_only=True)
     author = UserProjectSerializer(read_only=True)
@@ -53,7 +52,7 @@ class ProjectSerializer(ModelSerializer):
         }
 
 
-class IssueSerializer(ModelSerializer):
+class IssueSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
 
@@ -66,7 +65,7 @@ class IssueSerializer(ModelSerializer):
         ]
 
 
-class CommentSerializer(ModelSerializer):
+class CommentSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
 
@@ -77,7 +76,7 @@ class CommentSerializer(ModelSerializer):
         ]
 
 
-class ContributorSaveSerializer(ModelSerializer):
+class ContributorSaveSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = models.Contributor
@@ -86,9 +85,9 @@ class ContributorSaveSerializer(ModelSerializer):
         ]
 
 
-class ContributorSerializer(ModelSerializer):
+class ContributorSerializer(serializers.ModelSerializer):
     user = UserSerializer(read_only=True)
-    project = ProjectSerializer(read_only=True)
+    project = serializers.StringRelatedField()
 
     class Meta:
         model = models.Contributor

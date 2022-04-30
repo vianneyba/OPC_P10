@@ -1,5 +1,5 @@
 from rest_framework.permissions import BasePermission
-from its.models import Project, Issue, Comment
+from its.models import Project, Issue, Comment, Contributor
 from django.db.models import Q
 
 
@@ -22,12 +22,9 @@ def is_author_comment(comment_id, author):
 
 
 def in_contributors(project_id, user):
-    project = Project.objects.filter(
-        Q(id=project_id) &
-        (
-            Q(contributors=user) |
-            Q(author=user)))
-    if project.exists():
+    contributor = Contributor.object.filter(
+        project__id=project_id, user=user)
+    if contributor.exists():
         return True
     else:
         return False
@@ -93,7 +90,6 @@ class IssuePermissions(BasePermission):
 
 class CommentPermissions(BasePermission):
     def has_permission(self, request, view):
-        print(f'view.action = {view.action}')
         if not request.user.is_authenticated:
             return False
 
