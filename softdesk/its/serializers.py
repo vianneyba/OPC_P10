@@ -1,13 +1,14 @@
 from rest_framework.serializers import ModelSerializer
 
-from its.models import Project, Issue, Comment
-from authenticate.serializers import UserSerializer
+from its import models
+from authenticate.serializers import (
+    UserSerializer, UserProjectSerializer)
 
 
 class CommentSaveSerializer(ModelSerializer):
 
     class Meta:
-        model = Comment
+        model = models.Comment
         fields = [
             'id', 'description', 'author', 'issue'
         ]
@@ -16,7 +17,7 @@ class CommentSaveSerializer(ModelSerializer):
 class IssueSaveSerializer(ModelSerializer):
 
     class Meta:
-        model = Issue
+        model = models.Issue
         fields = [
             'id', 'title', 'description',
             'author', 'tag', 'status',
@@ -27,7 +28,7 @@ class IssueSaveSerializer(ModelSerializer):
 class ProjectSaveSerializer(ModelSerializer):
 
     class Meta:
-        model = Project
+        model = models.Project
         fields = [
                 'id', 'title', 'description',
                 'type', 'author', 'contributors']
@@ -38,11 +39,11 @@ class ProjectSaveSerializer(ModelSerializer):
 
 class ProjectSerializer(ModelSerializer):
 
-    contributors = UserSerializer(many=True, read_only=True)
-    author = UserSerializer(read_only=True)
+    contributors = UserProjectSerializer(many=True, read_only=True)
+    author = UserProjectSerializer(read_only=True)
 
     class Meta:
-        model = Project
+        model = models.Project
         fields = [
             'id', 'title', 'description',
             'type', 'author', 'contributors'
@@ -57,7 +58,7 @@ class IssueSerializer(ModelSerializer):
     author = UserSerializer(read_only=True)
 
     class Meta:
-        model = Issue
+        model = models.Issue
         fields = [
             'id', 'title', 'description',
             'author', 'tag', 'status',
@@ -70,7 +71,28 @@ class CommentSerializer(ModelSerializer):
     author = UserSerializer(read_only=True)
 
     class Meta:
-        model = Comment
+        model = models.Comment
         fields = [
             'id', 'description', 'author', 'issue'
+        ]
+
+
+class ContributorSaveSerializer(ModelSerializer):
+
+    class Meta:
+        model = models.Contributor
+        fields = [
+            "id", "permission", "role"
+        ]
+
+
+class ContributorSerializer(ModelSerializer):
+    user = UserSerializer(read_only=True)
+    project = ProjectSerializer(read_only=True)
+
+    class Meta:
+        model = models.Contributor
+        fields = [
+            "id", "user", "project",
+            "permission", "role"
         ]

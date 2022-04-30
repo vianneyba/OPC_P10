@@ -20,3 +20,10 @@ class UserSerializer(ModelSerializer):
         user.last_name = data['last_name']
         user.save()
         return user
+
+
+class UserProjectSerializer(ModelSerializer):
+
+    class Meta:
+        model = User
+        fields = ['email']

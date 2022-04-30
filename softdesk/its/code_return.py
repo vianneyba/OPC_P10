@@ -31,6 +31,10 @@ CONTRIBUTOR_DELETE = Response(
 CONTRIBUTOR_ADD = Response(
     {"message": "contributor added"}, status=status.HTTP_200_OK)
 
+CONTRIBUTOR_EXISTS = Response(
+    {"detail": "contributor exists"},
+    status=status.HTTP_409_CONFLICT)
+
 ISSUE_DELETE = Response(
     {"message": "issue deleted"}, status=status.HTTP_200_OK)
 

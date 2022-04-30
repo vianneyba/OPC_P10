@@ -27,6 +27,11 @@ PRIORITY = (
     ('ÉLEVÉE', 'ÉLEVÉE')
 )
 
+PERMISSIONS_CHOICES = (
+        ("author", "author"),
+        ("contributor", "contributor"),
+)
+
 
 class Issue(models.Model):
     title = models.CharField(
@@ -91,7 +96,8 @@ class Project(models.Model):
 
     contributors = models.ManyToManyField(
         User,
-        related_name='project_contributors')
+        through='Contributor',
+        related_name='contributions')
 
     def __str__(self):
         return f'{self.title}'
@@ -114,3 +120,18 @@ class Comment(models.Model):
 
     def __str__(self):
         return f'{self.issue.title}'
+
+
+class Contributor(models.Model):
+    user = models.ForeignKey(
+        User,
+        related_name='contrib',
+        on_delete=models.CASCADE)
+    project = models.ForeignKey(
+        Project,
+        on_delete=models.CASCADE)
+
+    permission = models.CharField(
+        max_length=250,
+        choices=PERMISSIONS_CHOICES)
+    role = models.CharField(max_length=250)

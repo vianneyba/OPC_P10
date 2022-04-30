@@ -5,7 +5,7 @@ from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
-from its.models import Project, Issue, Comment
+from its.models import Project, Issue, Comment, Contributor
 from its.models import TYPE, TAG, STATUS, PRIORITY
 from its import serializers, permissions, code_return
 from authenticate.serializers import UserSerializer
@@ -37,9 +37,15 @@ class ProjectViewset(ModelViewSet):
         tempdict['author'] = self.request.user.id
         serializer = serializers.ProjectSaveSerializer(data=tempdict)
         if serializer.is_valid():
-            serializer.save()
+            project = serializer.save()
+            Contributor.objects.create(
+                user=self.request.user,
+                project=project,
+                permission="author",
+                role="auhtor")
             return Response(
-                serializer.data, status=status.HTTP_201_CREATED)
+                self.serializer_class(project).data,
+                status=status.HTTP_201_CREATED)
         else:
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -62,7 +68,8 @@ class ProjectViewset(ModelViewSet):
         if serializer.is_valid():
             serializer.save()
             return Response(
-                serializer.data, status=status.HTTP_200_OK)
+                self.serializer_class(project_instance).data,
+                status=status.HTTP_200_OK)
         else:
             return Response(
                 serializer.errors, status=status.HTTP_400_BAD_REQUEST)
@@ -223,9 +230,7 @@ class UserViewSet(ModelViewSet):
     serializer_class = UserSerializer
 
     def get_queryset(self):
-        project = Project.objects.get(id=self.kwargs['project_pk'])
-        users = list(project.contributors.all())
-        users.append(project.author)
+        users = User.objects.filter(contributions=self.kwargs['project_pk'])
         return users
 
     def create(self, request, *args, **kwargs):
@@ -242,9 +247,20 @@ class UserViewSet(ModelViewSet):
         except Project.DoesNotExist:
             return code_return.PROJECT_NO_EXIST
 
-        project.contributors.add(user)
-
-        return code_return.CONTRIBUTOR_ADD
+        try:
+            Contributor.objects.get(user=user, project=project)
+            return code_return.CONTRIBUTOR_EXISTS
+        except Contributor.DoesNotExist:
+            sz = serializers.ContributorSaveSerializer(data=request.data)
+            if sz.is_valid():
+                sz.save(project=project, user=user)
+                contributor = Contributor.objects.get(
+                    project=project, user=user)
+                contributor_sz = serializers.ContributorSerializer(contributor)
+                return Response(
+                    contributor_sz.data, status=status.HTTP_200_OK)
+            return Response(
+                sz.errors, status=status.HTTP_400_BAD_REQUEST)
 
     def destroy(self, request, pk, *args, **kwargs):
         id_user = self.kwargs['pk']
