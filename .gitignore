@@ -3,3 +3,4 @@ env/
 __pycache__/
 __init__.py
 softdesk/.flake8
+migrations/

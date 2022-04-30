@@ -1,59 +1,14 @@
 from authenticate.models import User
 from django.db.models import Q
+from django.http import JsonResponse
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from its.models import Project, Issue, Comment
-from its.serializers import (
-    ProjectSerializer,
-    IssueSerializer,
-    CommentSerializer,
-    ProjectSaveSerializer,
-    IssueSaveSerializer,
-    CommentSaveSerializer
-)
+from its.models import TYPE, TAG, STATUS, PRIORITY
+from its import serializers, permissions, code_return
 from authenticate.serializers import UserSerializer
-from its.permissions import (
-    ProjectPermissions,
-    ContributorPermissions,
-    IssuePermissions,
-    CommentPermissions
-)
-
-USER_NO_EXIST = Response(
-    {"message": "user does not exist"},
-    status=status.HTTP_404_NOT_FOUND)
-
-PROJECT_NO_EXIST = Response(
-    {"message": "project does not exist"},
-    status=status.HTTP_404_NOT_FOUND)
-
-ISSUE_NOT_EXIST = Response(
-    {"message": "issue does not exist"},
-    status=status.HTTP_404_NOT_FOUND)
-
-COMMENT_NOT_EXIST = Response(
-    {"message": "comment does not exist"},
-    status=status.HTTP_404_NOT_FOUND)
-
-COMMENT_DELETE = Response(
-    {"message": "comment deleted"}, status=status.HTTP_200_OK)
-
-CONTRIBUTOR_DELETE = Response(
-    {"message": "contributor deleted"}, status=status.HTTP_200_OK)
-
-CONTRIBUTOR_ADD = Response(
-    {"message": "contributor added"}, status=status.HTTP_200_OK)
-
-ISSUE_DELETE = Response(
-    {"message": "issue deleted"}, status=status.HTTP_200_OK)
-
-COMMENT_CREATE = Response(
-    {"message": "comment created"}, status=status.HTTP_200_OK)
-
-FORBIDDEN = Response(
-    status.HTTP_403_FORBIDDEN)
 
 
 def is_valid(serializer):
@@ -68,8 +23,8 @@ def is_valid(serializer):
 
 class ProjectViewset(ModelViewSet):
 
-    permission_classes = (IsAuthenticated, ProjectPermissions,)
-    serializer_class = ProjectSerializer
+    permission_classes = (IsAuthenticated, permissions.ProjectPermissions,)
+    serializer_class = serializers.ProjectSerializer
 
     def get_queryset(self):
         return Project.objects.filter(
@@ -80,7 +35,7 @@ class ProjectViewset(ModelViewSet):
     def create(self, request, *args, **kwargs):
         tempdict = request.data.copy()
         tempdict['author'] = self.request.user.id
-        serializer = ProjectSaveSerializer(data=tempdict)
+        serializer = serializers.ProjectSaveSerializer(data=tempdict)
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -96,11 +51,14 @@ class ProjectViewset(ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         tempdict = request.data.copy()
-        tempdict['author'] = self.request.user.id
 
-        serializer = ProjectSerializer(
-            project_instance,
-            data=tempdict)
+        if 'assign_author' in tempdict:
+            tempdict['author'] = tempdict['assign_author']
+        else:
+            tempdict['author'] = self.request.user.id
+
+        serializer = serializers.ProjectSaveSerializer(
+            project_instance, data=tempdict)
         if serializer.is_valid():
             serializer.save()
             return Response(
@@ -116,14 +74,13 @@ class ProjectViewset(ModelViewSet):
             return Response(status=status.HTTP_404_NOT_FOUND)
 
         project_instance.delete()
-        return Response({
-            "message": "project deleted"}, status=status.HTTP_200_OK)
+        return code_return.PROJECT_DELETE
 
 
 class IssueViewset(ModelViewSet):
 
-    permission_classes = (IsAuthenticated, IssuePermissions,)
-    serializer_class = IssueSerializer
+    permission_classes = (IsAuthenticated, permissions.IssuePermissions,)
+    serializer_class = serializers.IssueSerializer
 
     def create_issue(
                     self, data, user_id, project_id,
@@ -132,9 +89,10 @@ class IssueViewset(ModelViewSet):
         tempdict['author'] = user_id
         tempdict['project'] = project_id
         if update:
-            serializer = IssueSaveSerializer(instance, data=tempdict)
+            serializer = serializers.IssueSaveSerializer(
+                instance, data=tempdict)
         else:
-            serializer = IssueSaveSerializer(data=tempdict)
+            serializer = serializers.IssueSaveSerializer(data=tempdict)
 
         return serializer
 
@@ -146,7 +104,7 @@ class IssueViewset(ModelViewSet):
         try:
             Project.objects.get(pk=project_id)
         except Project.DoesNotExist:
-            return PROJECT_NO_EXIST
+            return code_return.PROJECT_NO_EXIST
 
         serializer = self.create_issue(
             request.data, request.user.id, project_id)
@@ -159,12 +117,12 @@ class IssueViewset(ModelViewSet):
         try:
             Project.objects.get(pk=project_id)
         except Project.DoesNotExist:
-            return PROJECT_NO_EXIST
+            return code_return.PROJECT_NO_EXIST
 
         try:
             issue = Issue.objects.get(pk=issue_id)
         except Issue.DoesNotExist:
-            return ISSUE_NOT_EXIST
+            return code_return.ISSUE_NOT_EXIST
 
         serializer = self.create_issue(
             request.data, request.user.id, project_id,
@@ -184,16 +142,16 @@ class IssueViewset(ModelViewSet):
         try:
             issue = Issue.objects.get(pk=issue_id, project=project)
         except Issue.DoesNotExist:
-            return ISSUE_NOT_EXIST
+            return code_return.ISSUE_NOT_EXIST
 
         issue.delete()
-        return ISSUE_DELETE
+        return code_return.ISSUE_DELETE
 
 
 class CommentViewSet(ModelViewSet):
 
-    permission_classes = (IsAuthenticated, CommentPermissions,)
-    serializer_class = CommentSerializer
+    permission_classes = (IsAuthenticated, permissions.CommentPermissions,)
+    serializer_class = serializers.CommentSerializer
 
     def create_comment(
                     self, data, user_id, issue_id,
@@ -203,9 +161,10 @@ class CommentViewSet(ModelViewSet):
         tempdict['issue'] = issue_id
 
         if update:
-            serializer = CommentSaveSerializer(instance, data=tempdict)
+            serializer = serializers.CommentSaveSerializer(
+                instance, data=tempdict)
         else:
-            serializer = CommentSaveSerializer(data=tempdict)
+            serializer = serializers.CommentSaveSerializer(data=tempdict)
 
         return serializer
 
@@ -219,7 +178,7 @@ class CommentViewSet(ModelViewSet):
         try:
             issue = Issue.objects.get(pk=issue_id, project__pk=project_id)
         except Issue.DoesNotExist:
-            return ISSUE_NOT_EXIST
+            return code_return.ISSUE_NOT_EXIST
 
         serializer = self.create_comment(
             request.data, request.user.id, issue.id)
@@ -233,7 +192,7 @@ class CommentViewSet(ModelViewSet):
         try:
             comment = Comment.objects.get(pk=comment_id)
         except Comment.DoesNotExist:
-            return COMMENT_NOT_EXIST
+            return code_return.COMMENT_NOT_EXIST
 
         serializer = self.create_comment(
             request.data, request.user.id, issue_id,
@@ -248,19 +207,19 @@ class CommentViewSet(ModelViewSet):
         try:
             comment = Comment.objects.get(pk=comment_id)
         except Comment.DoesNotExist:
-            return COMMENT_NOT_EXIST
+            return code_return.COMMENT_NOT_EXIST
 
         if comment.author.id == user_id:
             comment.delete()
         else:
-            return FORBIDDEN
+            return code_return.FORBIDDEN
 
-        return COMMENT_DELETE
+        return code_return.COMMENT_DELETE
 
 
 class UserViewSet(ModelViewSet):
 
-    permission_classes = (IsAuthenticated, ContributorPermissions,)
+    permission_classes = (IsAuthenticated, permissions.ContributorPermissions,)
     serializer_class = UserSerializer
 
     def get_queryset(self):
@@ -270,22 +229,22 @@ class UserViewSet(ModelViewSet):
         return users
 
     def create(self, request, *args, **kwargs):
-        username = request.data["email"]
+        email = request.data["email"]
         project_id = self.kwargs['project_pk']
 
         try:
-            user = User.objects.get(username=username)
+            user = User.objects.get(email=email)
         except User.DoesNotExist:
-            return USER_NO_EXIST
+            return code_return.USER_NO_EXIST
 
         try:
             project = Project.objects.get(pk=project_id)
         except Project.DoesNotExist:
-            return PROJECT_NO_EXIST
+            return code_return.PROJECT_NO_EXIST
 
         project.contributors.add(user)
 
-        return CONTRIBUTOR_ADD
+        return code_return.CONTRIBUTOR_ADD
 
     def destroy(self, request, pk, *args, **kwargs):
         id_user = self.kwargs['pk']
@@ -301,11 +260,23 @@ class UserViewSet(ModelViewSet):
         except User.DoesNotExist:
             return Response(status=status.HTTP_404_NOT_FOUND)
 
+        print(f'user = {user}')
+
         if user in project.contributors.all():
             project.contributors.remove(user)
             project.save()
-            return CONTRIBUTOR_DELETE
+            return code_return.CONTRIBUTOR_DELETE
         else:
             return Response(
                 {"message": "user not in project"},
                 status=status.HTTP_404_NOT_FOUND)
+
+
+def option_view(self):
+    json_object = {
+        'tag': TAG,
+        'status': STATUS,
+        'type': TYPE,
+        'priority': PRIORITY}
+
+    return JsonResponse(json_object)
