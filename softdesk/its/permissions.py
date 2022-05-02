@@ -1,6 +1,5 @@
 from rest_framework.permissions import BasePermission
 from its.models import Project, Issue, Comment, Contributor
-from django.db.models import Q
 
 
 def is_author(project_id, author):
@@ -42,11 +41,9 @@ class ProjectPermissions(BasePermission):
             return is_author(view.kwargs['pk'], request.user)
 
         if view.action in ['retrieve']:
-            project = Project.objects.filter(
-                Q(contributors=request.user) |
-                Q(author=request.user)
-            )
-            if project.exists():
+            project = Project.objects.get(pk=view.kwargs['pk'])
+
+            if request.user in project.contributors.all():
                 return True
             else:
                 return False

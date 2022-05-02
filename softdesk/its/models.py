@@ -72,7 +72,7 @@ class Issue(models.Model):
         auto_now_add=True)
 
     def __str__(self):
-        return f'{self.title}'
+        return f'{self.id} - {self.title}'
 
 
 class Project(models.Model):
@@ -119,7 +119,7 @@ class Comment(models.Model):
         on_delete=models.CASCADE)
 
     def __str__(self):
-        return f'{self.issue.title}'
+        return f'{self.id} - {self.description}'
 
 
 class Contributor(models.Model):

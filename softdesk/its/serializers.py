@@ -36,6 +36,22 @@ class ProjectSaveSerializer(serializers.ModelSerializer):
         }
 
 
+class ProjectListSerializer(serializers.ModelSerializer):
+    contributors = UserProjectSerializer(many=True, read_only=True)
+    author = UserProjectSerializer(read_only=True)
+    issues = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = models.Project
+        fields = [
+            'id', 'title', 'description',
+            'type', 'author', 'contributors', 'issues'
+        ]
+        extra_kwargs = {
+            'contributors': {'allow_empty': True, 'required': False}
+        }
+
+
 class ProjectSerializer(serializers.ModelSerializer):
 
     contributors = UserProjectSerializer(many=True, read_only=True)
@@ -65,9 +81,24 @@ class IssueSerializer(serializers.ModelSerializer):
         ]
 
 
+class IssueListSerializer(serializers.ModelSerializer):
+
+    author = UserProjectSerializer(read_only=True)
+    comments = serializers.StringRelatedField(many=True)
+
+    class Meta:
+        model = models.Issue
+        fields = [
+            'id', 'title', 'description',
+            'author', 'tag', 'status',
+            'created_at', 'project', 'priority', 'comments'
+        ]
+
+
 class CommentSerializer(serializers.ModelSerializer):
 
     author = UserSerializer(read_only=True)
+    issue = serializers.StringRelatedField()
 
     class Meta:
         model = models.Comment

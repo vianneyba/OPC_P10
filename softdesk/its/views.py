@@ -1,5 +1,6 @@
 from authenticate.models import User
 from django.db.models import Q
+from django.shortcuts import get_object_or_404
 from django.http import JsonResponse
 from rest_framework.viewsets import ModelViewSet
 from rest_framework import status
@@ -21,6 +22,12 @@ class ProjectViewset(ModelViewSet):
             Q(contributors=self.request.user) |
             Q(author=self.request.user)
         ).distinct()
+
+    def retrieve(self, request, pk=None):
+        queryset = Project.objects.all()
+        project = get_object_or_404(queryset, pk=pk)
+        serializer = serializers.ProjectListSerializer(project)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         tempdict = request.data.copy()
@@ -95,6 +102,13 @@ class IssueViewset(ModelViewSet):
 
     def get_queryset(self):
         return Issue.objects.filter(project=self.kwargs['project_pk'])
+
+    def retrieve(self, request, *args, **kwargs):
+        print(f'pk = {self.kwargs}')
+        queryset = Issue.objects.all()
+        issue = get_object_or_404(queryset, pk=self.kwargs['pk'])
+        serializer = serializers.IssueListSerializer(issue)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         project_id = self.kwargs['project_pk']
@@ -242,6 +256,11 @@ class UserViewSet(ModelViewSet):
     def get_queryset(self):
         users = User.objects.filter(contributions=self.kwargs['project_pk'])
         return users
+
+    def list(self, request, *args, **kwargs):
+        contributors = Contributor.objects.filter(project=self.kwargs['project_pk'])
+        serializer = serializers.ContributorSerializer(contributors, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         email = request.data["email"]
