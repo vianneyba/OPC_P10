@@ -26,4 +26,4 @@ class UserProjectSerializer(ModelSerializer):
 
     class Meta:
         model = User
-        fields = ['email']
+        fields = ['id', 'email']

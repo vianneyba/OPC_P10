@@ -22,7 +22,7 @@ def is_author_comment(comment_id, author):
 
 
 def in_contributors(project_id, user):
-    contributor = Contributor.object.filter(
+    contributor = Contributor.objects.filter(
         project__id=project_id, user=user)
     if contributor.exists():
         return True

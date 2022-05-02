@@ -54,7 +54,7 @@ class ProjectSerializer(serializers.ModelSerializer):
 
 class IssueSerializer(serializers.ModelSerializer):
 
-    author = UserSerializer(read_only=True)
+    author = UserProjectSerializer(read_only=True)
 
     class Meta:
         model = models.Issue

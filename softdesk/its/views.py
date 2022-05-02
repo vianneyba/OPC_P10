@@ -11,16 +11,6 @@ from its import serializers, permissions, code_return
 from authenticate.serializers import UserSerializer
 
 
-def is_valid(serializer):
-    if serializer.is_valid():
-        serializer.save()
-        return Response(
-            serializer.data, status=status.HTTP_201_CREATED)
-    else:
-        return Response(
-            serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-
-
 class ProjectViewset(ModelViewSet):
 
     permission_classes = (IsAuthenticated, permissions.ProjectPermissions,)
@@ -116,7 +106,7 @@ class IssueViewset(ModelViewSet):
         serializer = self.create_issue(
             request.data, request.user.id, project_id)
 
-        return is_valid(serializer)
+        return self.is_valid(serializer)
 
     def update(self, request, *args, **kwargs):
         project_id = self.kwargs['project_pk']
@@ -135,7 +125,7 @@ class IssueViewset(ModelViewSet):
             request.data, request.user.id, project_id,
             update=True, instance=issue)
 
-        return is_valid(serializer)
+        return self.is_valid(serializer)
 
     def destroy(self, request, *args, **kwargs):
         project_id = self.kwargs['project_pk']
@@ -153,6 +143,17 @@ class IssueViewset(ModelViewSet):
 
         issue.delete()
         return code_return.ISSUE_DELETE
+
+    def is_valid(self, serializer):
+        if serializer.is_valid():
+            serializer.save()
+            issue = Issue.objects.get(pk=serializer.data['id'])
+            issue_sz = serializers.IssueSerializer(issue)
+            return Response(
+                issue_sz.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CommentViewSet(ModelViewSet):
@@ -190,7 +191,7 @@ class CommentViewSet(ModelViewSet):
         serializer = self.create_comment(
             request.data, request.user.id, issue.id)
 
-        return is_valid(serializer)
+        return self.is_valid(serializer)
 
     def update(self, request, *args, **kwargs):
         comment_id = self.kwargs['pk']
@@ -205,7 +206,7 @@ class CommentViewSet(ModelViewSet):
             request.data, request.user.id, issue_id,
             update=True, instance=comment)
 
-        return is_valid(serializer)
+        return self.is_valid(serializer)
 
     def destroy(self, request, *args, **kwargs):
         user_id = request.user.id
@@ -222,6 +223,15 @@ class CommentViewSet(ModelViewSet):
             return code_return.FORBIDDEN
 
         return code_return.COMMENT_DELETE
+
+    def is_valid(self, serializer):
+        if serializer.is_valid():
+            serializer.save()
+            return Response(
+                serializer.data, status=status.HTTP_201_CREATED)
+        else:
+            return Response(
+                serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
 class UserViewSet(ModelViewSet):
@@ -256,6 +266,10 @@ class UserViewSet(ModelViewSet):
                     contributor = Contributor.objects.get(
                         project=project, user=user)
                     contributor.permission = request.data['permission']
+                    author_contributor = Contributor.objects.get(
+                            project=project, permission='author')
+                    author_contributor.permission = 'contributor'
+                    author_contributor.save()
                     contributor.save()
                     contributor_sz = serializers.ContributorSerializer(contributor)
                     if request.data['permission'] == 'author':
